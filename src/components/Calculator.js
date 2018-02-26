@@ -126,46 +126,42 @@ export default class Calculator extends Component {
     this.setState(Calculator.initialState)
   };
 
-  processInput = (clickedKey) => {
+  processInput = () => {
     console.log('process');
     this.setState(prevState => {
-      const { inputActions, inputNumbers, internalTotal } = prevState;
+      const {inputActions, inputNumbers, internalTotal} = prevState;
       if (internalTotal === 0) {
-        console.log('howdy');
+        let calculation;
         switch (inputActions[0]) {
           case "+":
-            return {
-              internalTotal: this.add(inputNumbers[0], inputNumbers[1])
-            };
+            calculation = 'add';
+            break;
           case "-":
-            return {
-              internalTotal: this.subtract(inputNumbers[0], inputNumbers[1])
-            };
+            calculation = 'subtract';
+            break;
           case "/":
-            return {
-              internalTotal: this.divide(inputNumbers[0], inputNumbers[1])
-            };
+            calculation = 'divide';
+            break;
           case "*":
-            return {
-              internalTotal: this.multiply(inputNumbers[0], inputNumbers[1]),
-              total: `${internalTotal}`
-            };
+            calculation = 'multiply';
+            break;
           default:
             break;
         }
+        const updatedTotal = this[calculation](inputNumbers[0], inputNumbers[1])
+        return {
+          internalTotal: updatedTotal,
+          total: `${updatedTotal}`
+        }
       }
-    });
+    })
   };
 
   updateInput = (clickedKey) => {
     console.log('update');
 
-    if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
-      this.processInput()
-    }
-
     this.setState(prevState => {
-      const { inputActions, inputString, total } = prevState;
+      const { inputActions, inputString, internalTotal, total } = prevState;
       if (this.actionKeys.includes(clickedKey)) {
         if (total === '0' && this.actionKeys.includes(inputString[inputString.length -1])) {
           return {
@@ -177,7 +173,7 @@ export default class Calculator extends Component {
             inputNumbers: prevState.inputNumbers.concat(Number(total)),
             inputActions: prevState.inputActions.concat(clickedKey),
             inputString: `${prevState.inputString} ${total} ${clickedKey}`,
-            total: '0',
+            total: `${internalTotal}`,
           }
         }
       } else {
@@ -203,11 +199,15 @@ export default class Calculator extends Component {
         }
       }
     });
+
+    if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
+      this.processInput()
+    }
   };
 
   render() {
     return (
-      <Container className="calculator">
+      <Container className="calculator" style={{marginTop: "25%", alignText: "middle"}} text>
         <Segment raised={true} padded="very" style={{background: "whiteSmoke"}}>
           <Screen inputString={this.state.inputString} total={this.state.total}/>
           <KeyPad keyClick={this.keyClick}/>
