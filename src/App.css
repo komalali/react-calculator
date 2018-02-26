@@ -1,24 +1,14 @@
-.calculator {
-  display: flex;
-  flex: 2;
-}
-
-.App {
-  text-align: center;
-}
-
-.total {
-  font-size: 24px;
-}
-
-.input {
-  font-size: 18px;
+.key {
+  font-family: Helvetica;
+  font-size: 25px;
 }
 
 .screen {
-  background-color: whitesmoke;
+  padding: 0 10px;
+  margin-bottom: 10px;
 }
 
-body {
-  margin: 25% 0;
+.total {
+  font-family: 'Open Sans';
+  font-size: 30px;
 }
