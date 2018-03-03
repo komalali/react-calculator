@@ -25,7 +25,13 @@ const Key = (props) => {
               fluid
               onClick={() => props.keyClick(props.value)}
               size="huge"
-              style={{fontFamily: "Open Sans", fontSize:"20px", fontWeight: "regular", margin: "0", padding: "10px 0"}}>
+              style={{
+                fontFamily: "Open Sans",
+                fontSize: "20px",
+                fontWeight: "regular",
+                margin: "0",
+                padding: "10px 0"
+              }}>
         {props.value}
       </Button>
     </Grid.Column>
@@ -80,8 +86,10 @@ const ScreenRow = (props) => {
 const Screen = (props) => {
   return (
     <Segment.Group className="screen" style={{background: "white"}}>
-      <ScreenRow type="total" total={props.total} style={{fontFamily: 'Open Sans', fontSize: "30px", padding: "10px 0"}}/>
-      <ScreenRow type="input" input={props.inputString} style={{fontFamily: 'Open Sans', fontSize: "20px", padding: "10px 0"}}/>
+      <ScreenRow type="total" total={props.total}
+                 style={{fontFamily: 'Open Sans', fontSize: "40px", padding: "10px 0"}}/>
+      <ScreenRow type="input" input={props.inputString}
+                 style={{fontFamily: 'Open Sans', fontSize: "20px", padding: "10px 0"}}/>
     </Segment.Group>
   );
 };
@@ -91,11 +99,13 @@ export default class Calculator extends Component {
     inputNumbers: [],
     inputActions: [],
     inputString: '',
-    total: '0',
     internalTotal: 0,
+    lastClicked: undefined,
+    total: '0',
   });
 
-  actionKeys = ['+', '-', '/', '*'];
+  actionKeys = ['+', '-', '/', '*', '='];
+  numberKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '00'];
 
   state = Calculator.initialState();
 
@@ -107,11 +117,29 @@ export default class Calculator extends Component {
 
   divide = (priorTotal, number) => priorTotal / number;
 
+  calculate = (inputAction, inputNumber1, inputNumber2) => {
+    let calculation;
+    switch (inputAction) {
+      case "+":
+        calculation = 'add';
+        break;
+      case "-":
+        calculation = 'subtract';
+        break;
+      case "/":
+        calculation = 'divide';
+        break;
+      case "*":
+        calculation = 'multiply';
+        break;
+      default:
+        break;
+    }
+    return this[calculation](inputNumber1, inputNumber2)
+  };
+
   keyClick = (clickedKey) => {
     switch (clickedKey) {
-      case "=":
-        this.processInput();
-        break;
       case "clear":
         this.clearInput();
         break;
@@ -131,24 +159,7 @@ export default class Calculator extends Component {
     this.setState(prevState => {
       const {inputActions, inputNumbers, internalTotal} = prevState;
       if (internalTotal === 0) {
-        let calculation;
-        switch (inputActions[0]) {
-          case "+":
-            calculation = 'add';
-            break;
-          case "-":
-            calculation = 'subtract';
-            break;
-          case "/":
-            calculation = 'divide';
-            break;
-          case "*":
-            calculation = 'multiply';
-            break;
-          default:
-            break;
-        }
-        const updatedTotal = this[calculation](inputNumbers[0], inputNumbers[1])
+        const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], inputNumbers[1]);
         return {
           internalTotal: updatedTotal,
           total: `${updatedTotal}`
@@ -159,56 +170,140 @@ export default class Calculator extends Component {
 
   updateInput = (clickedKey) => {
     console.log('update');
-
-    this.setState(prevState => {
-      const { inputActions, inputString, internalTotal, total } = prevState;
-      if (this.actionKeys.includes(clickedKey)) {
-        if (total === '0' && this.actionKeys.includes(inputString[inputString.length -1])) {
-          return {
-            inputActions: inputActions.slice(0, inputActions.length - 1).concat(clickedKey),
-            inputString: `${inputString.substring(0, inputString.length - 1)}${clickedKey}`,
+    switch (clickedKey) {
+      case "+":
+      case "-":
+      case "*":
+      case "/":
+        this.setState(({ inputActions, inputNumbers, inputString, lastClicked, total }) => {
+          if (this.actionKeys.includes(lastClicked)) {
+            if (lastClicked === '=') {
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputString: `${inputString} ${clickedKey}`,
+                lastClicked: clickedKey,
+              }
+            }
+            return {
+              inputActions: inputActions.slice(0, inputActions.length - 1).concat(clickedKey),
+              inputString: `${inputString.substring(0, inputString.length - 1)}${clickedKey}`,
+              lastClicked: clickedKey,
+            };
           }
-        } else {
-          return {
-            inputNumbers: prevState.inputNumbers.concat(Number(total)),
-            inputActions: prevState.inputActions.concat(clickedKey),
-            inputString: `${prevState.inputString} ${total} ${clickedKey}`,
-            total: `${internalTotal}`,
+          if (this.numberKeys.includes(lastClicked)) {
+            return {
+              inputActions: inputActions.concat(clickedKey),
+              inputNumbers: inputNumbers.concat(Number(total)),
+              inputString: `${inputString} ${total} ${clickedKey}`,
+              lastClicked: clickedKey,
+              total: '0',
+            }
           }
-        }
-      } else {
-        if (total === '0') {
-          switch (clickedKey) {
-            case '0':
-            case '00':
-              break;
-            case '.':
-              return {total: `${prevState.total}${clickedKey}`};
-            default:
-              return {total: clickedKey}
+          if (lastClicked === '.') {
+            return {
+              inputActions: inputActions.concat(clickedKey),
+              inputNumbers: inputNumbers.concat(Number(total)),
+              inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
+              lastClicked: clickedKey,
+              total: 0,
+            }
           }
-        } else if (total.includes('.')) {
-          switch (clickedKey) {
-            case '.':
-              break;
-            default:
-              return {total: `${prevState.total}${clickedKey}`};
+        });
+        break;
+      case "=":
+        break;
+      case ".":
+        this.setState(({ lastClicked, total}) => {
+          if (total.includes(clickedKey)) { return; }
+          if (this.actionKeys.includes(lastClicked)) {
+            if (lastClicked === '=') {
+              const state = Calculator.initialState();
+              state.total = `${total}${clickedKey}`;
+              state.lastClicked = clickedKey;
+              return state;
+            }
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
           }
-        } else {
-          return {total: `${prevState.total}${clickedKey}`}
-        }
-      }
-    });
-
-    if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
-      this.processInput()
+          if (this.numberKeys.includes(lastClicked)) {
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
+          }
+      });
+        break;
+      case "0":
+      case "00":
+        this.setState(({ lastClicked, total }) => {
+          if (this.actionKeys.includes(lastClicked)) {
+            if (lastClicked === '=') {
+              return Calculator.initialState()
+            }
+            return {
+              total: '0',
+              lastClicked: clickedKey,
+            }
+          }
+          if (this.numberKeys.includes(lastClicked)) {
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
+          }
+          if (lastClicked === '.') {
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
+          }
+        });
+        break;
+      default:
+        this.setState(({ lastClicked, total }) => {
+          if (total === '0') {
+            return {
+              total: clickedKey,
+              lastClicked: clickedKey,
+            }
+          }
+          if (this.actionKeys.includes(lastClicked)) {
+            if (lastClicked === '=') {
+              return Calculator.initialState()
+            }
+            return {
+              total: clickedKey,
+              lastClicked: clickedKey,
+            }
+          }
+          if (this.numberKeys.includes(lastClicked)) {
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
+          }
+          if (lastClicked === ".") {
+            return {
+              total: `${total}${clickedKey}`,
+              lastClicked: clickedKey,
+            }
+          }
+        })
     }
+
+
+
+    // if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
+    //   this.processInput()
+    // }
   };
 
   render() {
     return (
-      <Container className="calculator" style={{marginTop: "25%", alignText: "middle"}} text>
-        <Segment raised={true} padded="very" style={{background: "whiteSmoke"}}>
+      <Container className="calculator" style={{marginTop: "5%", alignText: "middle"}} text>
+        <Segment raised={true} padded="very" style={{background: "lightgrey"}}>
           <Screen inputString={this.state.inputString} total={this.state.total}/>
           <KeyPad keyClick={this.keyClick}/>
         </Segment>
