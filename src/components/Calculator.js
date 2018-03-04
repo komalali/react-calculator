@@ -196,7 +196,6 @@ export default class Calculator extends Component {
               inputNumbers: inputNumbers.concat(Number(total)),
               inputString: `${inputString} ${total} ${clickedKey}`,
               lastClicked: clickedKey,
-              total: '0',
             }
           }
           if (lastClicked === '.') {
@@ -205,29 +204,60 @@ export default class Calculator extends Component {
               inputNumbers: inputNumbers.concat(Number(total)),
               inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
               lastClicked: clickedKey,
-              total: 0,
             }
           }
         });
         break;
       case "=":
-        break;
-      case ".":
-        this.setState(({ lastClicked, total}) => {
-          if (total.includes(clickedKey)) { return; }
+        this.setState(({ inputActions, inputNumbers, inputString, lastClicked, total }) => {
           if (this.actionKeys.includes(lastClicked)) {
-            if (lastClicked === '=') {
-              const state = Calculator.initialState();
-              state.total = `${total}${clickedKey}`;
-              state.lastClicked = clickedKey;
-              return state;
+            if (lastClicked === "=") {
+              return;
             }
             return {
-              total: `${total}${clickedKey}`,
+              inputActions: inputActions.slice(0, inputActions.length - 1),
+              inputString: inputString.slice(0, inputString.length - 1),
               lastClicked: clickedKey,
             }
           }
           if (this.numberKeys.includes(lastClicked)) {
+            return {
+              inputNumbers: inputNumbers.concat(Number(total)),
+              inputString: `${inputString} ${total}`,
+              lastClicked: clickedKey,
+            }
+          }
+          if (lastClicked === '.') {
+            return {
+              inputNumbers: inputNumbers.concat(Number(total)),
+              inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
+              lastClicked: clickedKey,
+            }
+          }
+        });
+        break;
+      case ".":
+        this.setState(({ lastClicked, total}) => {
+          if (_.isUndefined(lastClicked)) {
+            return {
+              total: '0.',
+              lastClicked: clickedKey,
+            }
+          }
+          if (this.actionKeys.includes(lastClicked)) {
+            if (lastClicked === '=') {
+              const state = Calculator.initialState();
+              state.total = '0.';
+              state.lastClicked = clickedKey;
+              return state;
+            }
+            return {
+              total: '0.',
+              lastClicked: clickedKey,
+            }
+          }
+          if (this.numberKeys.includes(lastClicked)) {
+            if (total.includes(clickedKey)) { return; }
             return {
               total: `${total}${clickedKey}`,
               lastClicked: clickedKey,
@@ -293,11 +323,9 @@ export default class Calculator extends Component {
         })
     }
 
-
-
-    // if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
-    //   this.processInput()
-    // }
+    if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
+      this.processInput()
+    }
   };
 
   render() {
