@@ -141,190 +141,155 @@ export default class Calculator extends Component {
   keyClick = (clickedKey) => {
     switch (clickedKey) {
       case "clear":
-        this.clearInput();
+        this.clear();
         break;
       default:
-        this.updateInput(clickedKey);
+        this.update(clickedKey);
         break;
     }
   };
 
-  clearInput = () => {
+  clear = () => {
     console.log('clear');
     this.setState(Calculator.initialState)
   };
 
-  updateInput = (clickedKey) => {
+  pushToInputNumbers = () => {
+    this.setState(prevState => ({ inputNumbers: prevState.inputNumbers.concat(Number(prevState.total)) }));
+  };
+
+  pushToInputActions = (clickedKey) => {
+    this.setState(prevState => ({ inputActions: prevState.inputActions.concat(clickedKey) }));
+  };
+
+  replaceLastInputAction = (clickedKey) => {
+    this.setState(prevState => ({
+      inputActions: prevState.inputActions.slice(0, prevState.inputActions.length - 1).concat(clickedKey)
+    }));
+  };
+
+  removeLastInputAction = () => {
+    this.setState(prevState => ({ inputActions: prevState.inputActions.slice(0, prevState.inputActions.length - 1)}))
+  };
+
+  updateLastClicked = (clickedKey) => this.setState({ lastClicked: clickedKey });
+
+  addNumberToInputString = () => {
+    this.setState(prevState => ({ inputString: `${prevState.inputString} ${Number(prevState.total)}`}))
+  };
+
+  addNumberAndActionToInputString = (clickedKey) => {
+    this.setState(prevState => ({ inputString: `${prevState.inputString} ${Number(prevState.total)} ${clickedKey}`}))
+  };
+
+  addActionToInputString = (clickedKey) => {
+    this.setState(prevState => ({ inputString: `${prevState.inputString} ${clickedKey}`}))
+  };
+
+  replaceLastInputStringAction = (clickedKey) => {
+    this.setState(prevState => ({
+      inputString: `${prevState.inputString.substring(0, prevState.inputString.length - 1)}${clickedKey}`
+    }));
+  };
+
+  removeLastInputStringAction = () => {
+    this.setState(prevState => ({
+      inputString: `${prevState.inputString.substring(0, prevState.inputString.length - 1)}`
+    }));
+  };
+
+  updateTotal = (updatedTotal) => this.setState({
+    internalTotal: updatedTotal,
+    total: `${updatedTotal}`
+  });
+
+
+  update = (clickedKey) => {
     console.log('update');
+    const {
+      inputActions,
+      inputNumbers,
+      inputString,
+      internalTotal,
+      lastClicked,
+      total
+    } = this.state;
+
     switch (clickedKey) {
       case "+":
       case "-":
       case "*":
       case "/":
-        this.setState(({ inputActions, inputNumbers, inputString, internalTotal, lastClicked, total }) => {
-          if (this.actionKeys.includes(lastClicked)) {
-            if (lastClicked === '=') {
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputString: `${inputString} ${clickedKey}`,
-                lastClicked: clickedKey,
-              }
-            }
-            return {
-              inputActions: inputActions.slice(0, inputActions.length - 1).concat(clickedKey),
-              inputString: `${inputString.substring(0, inputString.length - 1)}${clickedKey}`,
-              lastClicked: clickedKey,
-            };
+        if (this.actionKeys.includes(lastClicked)) {
+          if (lastClicked === '=') {
+            this.pushToInputActions(clickedKey);
+            this.addActionToInputString(clickedKey);
+            this.updateLastClicked(clickedKey);
+          } else {
+            this.replaceLastInputAction(clickedKey);
+            this.replaceLastInputStringAction(clickedKey);
+            this.updateLastClicked(clickedKey);
           }
-          if (this.numberKeys.includes(lastClicked)) {
-            if (inputNumbers.length === 1) {
-              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total} ${clickedKey}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`,
-              }
-            }
-            if (inputNumbers.length > 1) {
-              const updatedTotal = this.calculate(
-                inputActions[inputActions.length - 1],
-                internalTotal,
-                Number(total),
-              );
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total} ${clickedKey}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`
-              }
-            }
-            return {
-              inputActions: inputActions.concat(clickedKey),
-              inputNumbers: inputNumbers.concat(Number(total)),
-              inputString: `${inputString} ${total} ${clickedKey}`,
-              lastClicked: clickedKey,
-            }
+        }
+        if (this.numberKeys.includes(lastClicked)) {
+          this.pushToInputActions(clickedKey);
+          this.pushToInputNumbers();
+          this.addNumberAndActionToInputString(clickedKey);
+          this.updateLastClicked(clickedKey);
+          if (inputNumbers.length === 1) {
+            const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+            this.updateTotal(updatedTotal);
+          } else if (inputNumbers.length > 1) {
+            const updatedTotal = this.calculate(inputActions[inputActions.length - 1], internalTotal, Number(total));
+            this.updateTotal(updatedTotal);
           }
-          if (lastClicked === '.') {
-            if (inputNumbers.length === 1) {
-              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`,
-              }
-            }
-            if (inputNumbers.length > 1) {
-              const updatedTotal = this.calculate(
-                inputActions[inputActions.length - 1],
-                internalTotal,
-                Number(total),
-              );
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`
-              }
-            }
-            return {
-              inputActions: inputActions.concat(clickedKey),
-              inputNumbers: inputNumbers.concat(Number(total)),
-              inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
-              lastClicked: clickedKey,
-            }
+        }
+        if (lastClicked === '.') {
+          this.pushToInputActions(clickedKey);
+          this.pushToInputNumbers();
+          this.addNumberAndActionToInputString(clickedKey);
+          this.updateLastClicked(clickedKey);
+          if (inputNumbers.length === 1) {
+            const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+            this.updateTotal(updatedTotal);
+          } else if (inputNumbers.length > 1) {
+            const updatedTotal = this.calculate(inputActions[inputActions.length - 1], internalTotal, Number(total));
+            this.updateTotal(updatedTotal);
           }
-        });
+        }
         break;
       case "=":
-        this.setState(({ inputActions, inputNumbers, inputString, internalTotal, lastClicked, total }) => {
-          if (this.actionKeys.includes(lastClicked)) {
-            if (lastClicked === "=") {
-              return;
-            }
-            return {
-              inputActions: inputActions.slice(0, inputActions.length - 1),
-              inputString: inputString.slice(0, inputString.length - 1),
-              lastClicked: clickedKey,
-            }
+        if (this.actionKeys.includes(lastClicked)) {
+          if (lastClicked !== "=") {
+            this.removeLastInputAction();
+            this.removeLastInputStringAction();
+            this.updateLastClicked(clickedKey);
           }
-          if (this.numberKeys.includes(lastClicked)) {
-            if (inputNumbers.length === 1) {
-              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`,
-              }
-            }
-            if (inputNumbers.length > 1) {
-              const updatedTotal = this.calculate(
-                inputActions[inputActions.length - 1],
-                internalTotal,
-                Number(total),
-              );
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`
-              }
-            }
-            return {
-              inputNumbers: inputNumbers.concat(Number(total)),
-              inputString: `${inputString} ${total}`,
-              lastClicked: clickedKey,
-            }
+        }
+        if (this.numberKeys.includes(lastClicked)) {
+          this.pushToInputNumbers();
+          this.addNumberToInputString();
+          this.updateLastClicked(clickedKey);
+          if (inputNumbers.length === 1) {
+            const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+            this.updateTotal(updatedTotal);
+          } else if (inputNumbers.length > 1) {
+            const updatedTotal = this.calculate(inputActions[inputActions.length - 1], internalTotal, Number(total));
+            this.updateTotal(updatedTotal);
           }
-          if (lastClicked === '.') {
-            if (inputNumbers.length === 1) {
-              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`,
-              }
-            }
-            if (inputNumbers.length > 1) {
-              const updatedTotal = this.calculate(
-                inputActions[inputActions.length - 1],
-                internalTotal,
-                Number(total),
-              );
-              return {
-                inputActions: inputActions.concat(clickedKey),
-                inputNumbers: inputNumbers.concat(Number(total)),
-                inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
-                internalTotal: updatedTotal,
-                lastClicked: clickedKey,
-                total: `${updatedTotal}`
-              }
-            }
-            return {
-              inputNumbers: inputNumbers.concat(Number(total)),
-              inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
-              lastClicked: clickedKey,
-            }
+        }
+        if (lastClicked === '.') {
+          this.pushToInputNumbers();
+          this.addNumberToInputString();
+          this.updateLastClicked(clickedKey);
+          if (inputNumbers.length === 1) {
+            const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+            this.updateTotal(updatedTotal);
+          } else if (inputNumbers.length > 1) {
+            const updatedTotal = this.calculate(inputActions[inputActions.length - 1], internalTotal, Number(total));
+            this.updateTotal(updatedTotal);
           }
-        });
+        }
         break;
       case ".":
         this.setState(({ lastClicked, total}) => {
