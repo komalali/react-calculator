@@ -87,7 +87,7 @@ const Screen = (props) => {
   return (
     <Segment.Group className="screen" style={{background: "white"}}>
       <ScreenRow type="total" total={props.total}
-                 style={{fontFamily: 'Open Sans', fontSize: "40px", padding: "10px 0"}}/>
+                 style={{fontFamily: 'Open Sans', fontSize: "30px", padding: "10px 0", overflow: "hidden"}}/>
       <ScreenRow type="input" input={props.inputString}
                  style={{fontFamily: 'Open Sans', fontSize: "20px", padding: "10px 0"}}/>
     </Segment.Group>
@@ -154,20 +154,6 @@ export default class Calculator extends Component {
     this.setState(Calculator.initialState)
   };
 
-  processInput = () => {
-    console.log('process');
-    this.setState(prevState => {
-      const {inputActions, inputNumbers, internalTotal} = prevState;
-      if (internalTotal === 0) {
-        const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], inputNumbers[1]);
-        return {
-          internalTotal: updatedTotal,
-          total: `${updatedTotal}`
-        }
-      }
-    })
-  };
-
   updateInput = (clickedKey) => {
     console.log('update');
     switch (clickedKey) {
@@ -175,7 +161,7 @@ export default class Calculator extends Component {
       case "-":
       case "*":
       case "/":
-        this.setState(({ inputActions, inputNumbers, inputString, lastClicked, total }) => {
+        this.setState(({ inputActions, inputNumbers, inputString, internalTotal, lastClicked, total }) => {
           if (this.actionKeys.includes(lastClicked)) {
             if (lastClicked === '=') {
               return {
@@ -191,6 +177,32 @@ export default class Calculator extends Component {
             };
           }
           if (this.numberKeys.includes(lastClicked)) {
+            if (inputNumbers.length === 1) {
+              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total} ${clickedKey}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`,
+              }
+            }
+            if (inputNumbers.length > 1) {
+              const updatedTotal = this.calculate(
+                inputActions[inputActions.length - 1],
+                internalTotal,
+                Number(total),
+              );
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total} ${clickedKey}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`
+              }
+            }
             return {
               inputActions: inputActions.concat(clickedKey),
               inputNumbers: inputNumbers.concat(Number(total)),
@@ -199,6 +211,32 @@ export default class Calculator extends Component {
             }
           }
           if (lastClicked === '.') {
+            if (inputNumbers.length === 1) {
+              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`,
+              }
+            }
+            if (inputNumbers.length > 1) {
+              const updatedTotal = this.calculate(
+                inputActions[inputActions.length - 1],
+                internalTotal,
+                Number(total),
+              );
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total.substring(0, total.length - 1)} ${clickedKey}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`
+              }
+            }
             return {
               inputActions: inputActions.concat(clickedKey),
               inputNumbers: inputNumbers.concat(Number(total)),
@@ -209,7 +247,7 @@ export default class Calculator extends Component {
         });
         break;
       case "=":
-        this.setState(({ inputActions, inputNumbers, inputString, lastClicked, total }) => {
+        this.setState(({ inputActions, inputNumbers, inputString, internalTotal, lastClicked, total }) => {
           if (this.actionKeys.includes(lastClicked)) {
             if (lastClicked === "=") {
               return;
@@ -221,6 +259,32 @@ export default class Calculator extends Component {
             }
           }
           if (this.numberKeys.includes(lastClicked)) {
+            if (inputNumbers.length === 1) {
+              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`,
+              }
+            }
+            if (inputNumbers.length > 1) {
+              const updatedTotal = this.calculate(
+                inputActions[inputActions.length - 1],
+                internalTotal,
+                Number(total),
+              );
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`
+              }
+            }
             return {
               inputNumbers: inputNumbers.concat(Number(total)),
               inputString: `${inputString} ${total}`,
@@ -228,6 +292,32 @@ export default class Calculator extends Component {
             }
           }
           if (lastClicked === '.') {
+            if (inputNumbers.length === 1) {
+              const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`,
+              }
+            }
+            if (inputNumbers.length > 1) {
+              const updatedTotal = this.calculate(
+                inputActions[inputActions.length - 1],
+                internalTotal,
+                Number(total),
+              );
+              return {
+                inputActions: inputActions.concat(clickedKey),
+                inputNumbers: inputNumbers.concat(Number(total)),
+                inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
+                internalTotal: updatedTotal,
+                lastClicked: clickedKey,
+                total: `${updatedTotal}`
+              }
+            }
             return {
               inputNumbers: inputNumbers.concat(Number(total)),
               inputString: `${inputString} ${total.substring(0, total.length - 1)}`,
@@ -321,10 +411,6 @@ export default class Calculator extends Component {
             }
           }
         })
-    }
-
-    if (this.actionKeys.includes(clickedKey) && this.state.inputActions.length > 0) {
-      this.processInput()
     }
   };
 
