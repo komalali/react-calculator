@@ -214,6 +214,7 @@ export default class Calculator extends Component {
     const {
       inputActions,
       inputNumbers,
+      inputString,
       internalTotal,
       lastClicked,
       total
@@ -228,18 +229,17 @@ export default class Calculator extends Component {
           if (lastClicked === '=') {
             this.pushToInputActions(clickedKey);
             this.addActionToInputString(clickedKey);
-            this.updateLastClicked(clickedKey);
           } else {
-            this.replaceLastInputAction(clickedKey);
-            this.replaceLastInputStringAction(clickedKey);
-            this.updateLastClicked(clickedKey);
+            if (inputString.length > 1) {
+              this.replaceLastInputAction(clickedKey);
+              this.replaceLastInputStringAction(clickedKey);
+            }
           }
         }
         if (this.numberKeys.includes(lastClicked)) {
           this.pushToInputActions(clickedKey);
           this.pushToInputNumbers();
           this.addNumberAndActionToInputString(clickedKey);
-          this.updateLastClicked(clickedKey);
           if (inputNumbers.length === 1) {
             const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
             this.showCalculatedTotal(updatedTotal);
@@ -252,7 +252,6 @@ export default class Calculator extends Component {
           this.pushToInputActions(clickedKey);
           this.pushToInputNumbers();
           this.addNumberAndActionToInputString(clickedKey);
-          this.updateLastClicked(clickedKey);
           if (inputNumbers.length === 1) {
             const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
             this.showCalculatedTotal(updatedTotal);
@@ -267,13 +266,11 @@ export default class Calculator extends Component {
           if (lastClicked !== "=") {
             this.removeLastInputAction();
             this.removeLastInputStringAction();
-            this.updateLastClicked(clickedKey);
           }
         }
         if (this.numberKeys.includes(lastClicked)) {
           this.pushToInputNumbers();
           this.addNumberToInputString();
-          this.updateLastClicked(clickedKey);
           if (inputNumbers.length === 1) {
             const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
             this.showCalculatedTotal(updatedTotal);
@@ -285,7 +282,6 @@ export default class Calculator extends Component {
         if (lastClicked === '.') {
           this.pushToInputNumbers();
           this.addNumberToInputString();
-          this.updateLastClicked(clickedKey);
           if (inputNumbers.length === 1) {
             const updatedTotal = this.calculate(inputActions[0], inputNumbers[0], Number(total));
             this.showCalculatedTotal(updatedTotal);
@@ -298,21 +294,17 @@ export default class Calculator extends Component {
       case ".":
         if (_.isUndefined(lastClicked)) {
           this.appendToTotal(clickedKey);
-          this.updateLastClicked(clickedKey);
         } else if (this.actionKeys.includes(lastClicked)) {
           if (lastClicked === '=') {
             this.setState(Calculator.initialState());
             this.appendToTotal(clickedKey);
-            this.updateLastClicked(clickedKey);
           } else {
             this.resetTotal();
             this.appendToTotal(clickedKey);
-            this.updateLastClicked(clickedKey);
           }
         } else if (this.numberKeys.includes(lastClicked)) {
           if (!total.includes(clickedKey)) {
             this.appendToTotal(clickedKey);
-            this.updateLastClicked(clickedKey);
           }
         }
         break;
@@ -321,39 +313,32 @@ export default class Calculator extends Component {
         if (this.actionKeys.includes(lastClicked)) {
           if (lastClicked === '=') {
             this.setState(Calculator.initialState());
-            this.updateLastClicked(clickedKey);
           } else {
             this.resetTotal();
-            this.updateLastClicked(clickedKey);
           }
         } else if (this.numberKeys.includes(lastClicked)) {
           this.appendToTotal(clickedKey);
-          this.updateLastClicked(clickedKey);
         } else if (lastClicked === '.') {
-          this.appendToTotal(this.keyClick);
-          this.updateLastClicked(clickedKey);
+          this.appendToTotal(clickedKey);
         }
         break;
       default:
         if (total === '0') {
           this.setTotal(clickedKey);
-          this.updateLastClicked(clickedKey);
         } else if (this.actionKeys.includes(lastClicked)) {
           if (lastClicked === '=') {
             this.setState(Calculator.initialState());
-            this.updateLastClicked(clickedKey);
+            this.setTotal(clickedKey);
           } else {
             this.setTotal(clickedKey);
-            this.updateLastClicked(clickedKey);
           }
         } else if (this.numberKeys.includes(lastClicked)) {
           this.appendToTotal(clickedKey);
-          this.updateLastClicked(clickedKey);
         } else if (lastClicked === ".") {
           this.appendToTotal(clickedKey);
-          this.updateLastClicked(clickedKey);
         }
     }
+    this.updateLastClicked(clickedKey);
   };
 
   render() {
